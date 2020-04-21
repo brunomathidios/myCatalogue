@@ -11,10 +11,7 @@
 	<div class="container">
 		<div class="starter-template">
 	
-			<h2 th:inline="text">Hello [[${#httpServletRequest.remoteUser}]]</h2>
-			<form th:action="@{/logout}" method="post">
-	            <input type="submit" value="Déconnexion"/>
-	        </form>
+			<h2 th:inline="text">Salut [[${nomUtilisateur}]]</h2>
 		
 			<div class="card">
 				<div class="card-header">Liste de produits</div>

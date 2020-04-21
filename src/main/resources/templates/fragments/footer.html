@@ -10,15 +10,9 @@
 
         <footer>
         <!-- this is footer -->
-        &copy; 2017 mkyong.com
-            <span sec:authorize="isAuthenticated()">
-                | Logged user: <span sec:authentication="name"></span> |
-                Roles: <span sec:authentication="principal.authorities"></span> |
-                <a th:href="@{/logout}">Sign Out</a>
-            </span>
+        &copy; 2020 Bruno Mathidios
 
-        <script type="text/javascript"
-                src="webjars/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="webjars/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 
         </footer>
     </div>
