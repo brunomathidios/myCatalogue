@@ -34,6 +34,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.saml.SAMLBootstrap;
 import org.springframework.security.saml.SAMLEntryPoint;
+import org.springframework.security.saml.SAMLLogoutFilter;
+import org.springframework.security.saml.SAMLLogoutProcessingFilter;
+import org.springframework.security.saml.SAMLProcessingFilter;
 import org.springframework.security.saml.context.SAMLContextProviderImpl;
 import org.springframework.security.saml.key.JKSKeyManager;
 import org.springframework.security.saml.key.KeyManager;
@@ -66,11 +69,16 @@ import org.springframework.security.web.FilterChainProxy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+	
+	/** configuração para authentication spring security **/
 	
 	@Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -85,7 +93,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/home", true)
-                //.defaultSuccessUrl("/saml/login", true))
+                //.defaultSuccessUrl("/saml/login", true)
                 .permitAll()
                 .and()
             .logout()
@@ -119,12 +127,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
     
+    /** fim configuração para authentication spring security **/
+    
     /** authentication with SAML **/
     
     @Bean
     public SAMLEntryPoint samlEntryPoint() {
         SAMLEntryPoint samlEntryPoint = new SAMLEntryPoint();
-        samlEntryPoint.setDefaultProfileOptions(defaultWebSSOProfileOptions());
+        samlEntryPoint.setDefaultProfileOptions(this.defaultWebSSOProfileOptions());
         return samlEntryPoint;
     }
     
@@ -325,8 +335,53 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	    	SimpleUrlAuthenticationFailureHandler failureHandler =
 	    			new SimpleUrlAuthenticationFailureHandler();
 	    	failureHandler.setUseForward(true);
-	    	failureHandler.setDefaultFailureUrl("/error");
+	    	failureHandler.setDefaultFailureUrl("/500");
 	    	return failureHandler;
+    }
+    
+    // Processing filter for WebSSO profile messages
+    @Bean
+    public SAMLProcessingFilter samlWebSSOProcessingFilter() throws Exception {
+        SAMLProcessingFilter samlWebSSOProcessingFilter = new SAMLProcessingFilter();
+        samlWebSSOProcessingFilter.setAuthenticationManager(this.authenticationManager());
+        samlWebSSOProcessingFilter.setAuthenticationSuccessHandler(this.successRedirectHandler());
+        samlWebSSOProcessingFilter.setAuthenticationFailureHandler(this.authenticationFailureHandler());
+        return samlWebSSOProcessingFilter;
+    }
+    
+    // Handler for successful logout
+    @Bean
+    public SimpleUrlLogoutSuccessHandler successLogoutHandler() {
+        SimpleUrlLogoutSuccessHandler successLogoutHandler = new SimpleUrlLogoutSuccessHandler();
+        successLogoutHandler.setDefaultTargetUrl("/");
+        successLogoutHandler.setAlwaysUseDefaultTargetUrl(true);
+        return successLogoutHandler;
+    }
+    
+    // Logout handler terminating local session
+    @Bean
+    public SecurityContextLogoutHandler logoutHandler() {
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.setInvalidateHttpSession(true);
+        logoutHandler.setClearAuthentication(true);
+        return logoutHandler;
+    }
+    
+    // Overrides default logout processing filter with the one processing SAML
+    // messages
+    @Bean
+    public SAMLLogoutFilter samlLogoutFilter() {
+        return new SAMLLogoutFilter(this.successLogoutHandler(),
+                new LogoutHandler[] { this.logoutHandler() },
+                new LogoutHandler[] { this.logoutHandler() });
+    }
+    
+    // Filter processing incoming logout messages
+    // First argument determines URL user will be redirected to after successful
+    // global logout
+    @Bean
+    public SAMLLogoutProcessingFilter samlLogoutProcessingFilter() {
+        return new SAMLLogoutProcessingFilter(this.successLogoutHandler(), this.logoutHandler());
     }
     
     /**
@@ -338,18 +393,24 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public FilterChainProxy samlFilter() throws Exception {
         List<SecurityFilterChain> chains = new ArrayList<SecurityFilterChain>();
-        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/login/**"),
-                samlEntryPoint()));
-//        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/logout/**"),
-//                samlLogoutFilter()));
-//        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/metadata/**"),
-//                metadataDisplayFilter()));
-//        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SSO/**"),
-//                samlWebSSOProcessingFilter()));
+        
+        chains.add(new DefaultSecurityFilterChain(
+        		new AntPathRequestMatcher("/saml/metadata/**"), this.metadataDisplayFilter()));
+        
+        chains.add(new DefaultSecurityFilterChain(
+        		new AntPathRequestMatcher("/saml/login/**"), this.samlEntryPoint()));
+        
+        chains.add(new DefaultSecurityFilterChain(
+        		new AntPathRequestMatcher("/saml/SSO/**"), this.samlWebSSOProcessingFilter()));
+        
+        chains.add(new DefaultSecurityFilterChain(
+        		new AntPathRequestMatcher("/saml/logout/**"), this.samlLogoutFilter()));
+        
+        chains.add(new DefaultSecurityFilterChain(
+        		new AntPathRequestMatcher("/saml/SingleLogout/**"), this.samlLogoutProcessingFilter()));
+        
 //        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SSOHoK/**"),
 //                samlWebSSOHoKProcessingFilter()));
-//        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SingleLogout/**"),
-//                samlLogoutProcessingFilter()));
 //        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/discovery/**"),
 //                samlIDPDiscovery()));
         return new FilterChainProxy(chains);
