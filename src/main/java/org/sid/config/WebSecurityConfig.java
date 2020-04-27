@@ -18,7 +18,6 @@ import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.xml.parse.ParserPool;
 import org.opensaml.xml.parse.StaticBasicParserPool;
 import org.sid.error.CustomHttp403ForbiddenEntryPoint;
-import org.sid.service.impl.SAMLUserDetailsServiceImpl;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,9 +93,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 	
 	/** configuração para authentication spring security **/
 	
-	@Autowired
-    private SAMLUserDetailsServiceImpl samlUserDetailsServiceImpl;
-	
 	private Timer backgroundTaskTimer;
 	private MultiThreadedHttpConnectionManager multiThreadedHttpConnectionManager;
 	
@@ -138,7 +134,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 	
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/webjars/**", "/saml/**");
+		web.ignoring().antMatchers("/webjars/**");
+		web.ignoring().antMatchers("/saml/**");
 		web.ignoring().antMatchers("/css/**","/fonts/**","/libs/**");
 	}
 	
@@ -237,7 +234,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     @Bean
     public ExtendedMetadata extendedMetadata() {
 	    ExtendedMetadata extendedMetadata = new ExtendedMetadata();
-	    //extendedMetadata.setIdpDiscoveryEnabled(true);
 	    extendedMetadata.setIdpDiscoveryEnabled(false);
 	    extendedMetadata.setSigningAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
 	    extendedMetadata.setSignMetadata(true);
@@ -245,6 +241,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 	    return extendedMetadata;
     }
     
+    // Bindings, encoders and decoders used for creating and parsing messages
     @Bean
     public HttpClient httpClient() {
         return new HttpClient(this.multiThreadedHttpConnectionManager);
@@ -268,16 +265,24 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     }
     
     /** chave gerada através do comando:
-     * keytool -genkeypair -alias bm_keyalias -keypass bm_pass -storepass bm_pass -keystore bm-keystore.jks
+     * keytool -genkeypair -alias bm_keyalias -keypass bm_pass -storepass bm_pass (-keysize 1024) -keystore bm2-keystore.jks
      * **/
     @Bean
     public KeyManager keyManager() {
-        DefaultResourceLoader loader = new DefaultResourceLoader();
-        org.springframework.core.io.Resource storeFile = loader.getResource("classpath:/saml/bm-keystore.jks");
-        String storePass = "bm_pass";
-        Map<String, String> passwords = new HashMap<>();
-        passwords.put("bm_keyalias", "bm_pass");
-        String defaultKey = "bm_keyalias";
+//        DefaultResourceLoader loader = new DefaultResourceLoader();
+//        org.springframework.core.io.Resource storeFile = loader.getResource("classpath:/saml/bm2-keystore.jks");
+//        String storePass = "bm_pass";
+//        Map<String, String> passwords = new HashMap<>();
+//        passwords.put("bm_keyalias", "bm_pass");
+//        String defaultKey = "bm_keyalias";
+//        return new JKSKeyManager(storeFile, storePass, passwords, defaultKey);
+    	DefaultResourceLoader loader = new DefaultResourceLoader();
+    	org.springframework.core.io.Resource storeFile = loader
+                .getResource("classpath:/saml/samlKeystore.jks");
+        String storePass = "nalle123";
+        Map<String, String> passwords = new HashMap<String, String>();
+        passwords.put("apollo", "nalle123");
+        String defaultKey = "apollo";
         return new JKSKeyManager(storeFile, storePass, passwords, defaultKey);
     }
     
@@ -300,8 +305,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 		return extendedMetadataDelegate;
 	}
     
-    // IDP Metadata configuration - paths to metadata of IDPs in circle of trust
-    // is here
+    // IDP Metadata configuration - paths to metadata of IDPs in circle of trust is here
     // Do no forget to call iniitalize method on providers
     @Bean
     @Qualifier("metadata")
@@ -315,9 +319,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     @Bean
     public MetadataGenerator metadataGenerator() {
         MetadataGenerator metadataGenerator = new MetadataGenerator();
-        //metadataGenerator.setEntityId("com:vdenotaris:spring:sp");
         metadataGenerator.setEntityId("br.com.mathidios.sp");
-        metadataGenerator.setEntityBaseURL("http://localhost:8080/bm-test/home");
+        metadataGenerator.setEntityBaseURL("http://localhost:8080/bm-test");
         metadataGenerator.setExtendedMetadata(this.extendedMetadata());
         metadataGenerator.setIncludeDiscoveryExtension(false);
         metadataGenerator.setKeyManager(this.keyManager()); 
@@ -336,7 +339,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
         return new MetadataDisplayFilter();
     }
     
- // Processor
+    // Processor
  	@Bean
  	public SAMLProcessorImpl processor() {
  		Collection<SAMLBinding> bindings = new ArrayList<SAMLBinding>();
@@ -401,7 +404,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 	    	SimpleUrlAuthenticationFailureHandler failureHandler =
 	    			new SimpleUrlAuthenticationFailureHandler();
 	    	failureHandler.setUseForward(true);
-	    	failureHandler.setDefaultFailureUrl("/500");
+	    	failureHandler.setDefaultFailureUrl("/error");
 	    	return failureHandler;
     }
     
