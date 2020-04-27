@@ -36,7 +36,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.saml.SAMLAuthenticationProvider;
 import org.springframework.security.saml.SAMLBootstrap;
 import org.springframework.security.saml.SAMLEntryPoint;
 import org.springframework.security.saml.SAMLLogoutFilter;
@@ -68,7 +67,9 @@ import org.springframework.security.saml.websso.SingleLogoutProfile;
 import org.springframework.security.saml.websso.SingleLogoutProfileImpl;
 import org.springframework.security.saml.websso.WebSSOProfile;
 import org.springframework.security.saml.websso.WebSSOProfileConsumer;
+import org.springframework.security.saml.websso.WebSSOProfileConsumerHoKImpl;
 import org.springframework.security.saml.websso.WebSSOProfileConsumerImpl;
+import org.springframework.security.saml.websso.WebSSOProfileECPImpl;
 import org.springframework.security.saml.websso.WebSSOProfileImpl;
 import org.springframework.security.saml.websso.WebSSOProfileOptions;
 import org.springframework.security.web.DefaultSecurityFilterChain;
@@ -184,6 +185,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     public WebSSOProfileConsumer webSSOprofileConsumer() {
         return new WebSSOProfileConsumerImpl();
     }
+    
+    // SAML 2.0 Holder-of-Key WebSSO Assertion Consumer
+    @Bean
+    public WebSSOProfileConsumerHoKImpl hokWebSSOprofileConsumer() {
+        return new WebSSOProfileConsumerHoKImpl();
+    }
   
     // SAML 2.0 Web SSO profile
     /** WebSSOProfile Class implements WebSSO profile and offers capabilities for SP initialized SSO 
@@ -192,6 +199,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     @Bean
     public WebSSOProfile webSSOprofile() {
         return new WebSSOProfileImpl();
+    }
+    
+    // SAML 2.0 Holder-of-Key Web SSO profile
+    @Bean
+    public WebSSOProfileConsumerHoKImpl hokWebSSOProfile() {
+        return new WebSSOProfileConsumerHoKImpl();
+    }
+    
+    // SAML 2.0 ECP profile
+    @Bean
+    public WebSSOProfileECPImpl ecpprofile() {
+        return new WebSSOProfileECPImpl();
     }
   
     @Bean
@@ -298,6 +317,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
         MetadataGenerator metadataGenerator = new MetadataGenerator();
         //metadataGenerator.setEntityId("com:vdenotaris:spring:sp");
         metadataGenerator.setEntityId("br.com.mathidios.sp");
+        metadataGenerator.setEntityBaseURL("http://localhost:8080/bm-test/home");
         metadataGenerator.setExtendedMetadata(this.extendedMetadata());
         metadataGenerator.setIncludeDiscoveryExtension(false);
         metadataGenerator.setKeyManager(this.keyManager()); 
@@ -467,8 +487,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
         chains.add(new DefaultSecurityFilterChain(
         		new AntPathRequestMatcher("/saml/SSOHoK/**"), this.samlWebSSOHoKProcessingFilter()));
         
-//        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/discovery/**"),
-//                samlIDPDiscovery()));
         return new FilterChainProxy(chains);
     }
     
