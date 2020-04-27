@@ -18,6 +18,9 @@ import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.xml.parse.ParserPool;
 import org.opensaml.xml.parse.StaticBasicParserPool;
 import org.sid.error.CustomHttp403ForbiddenEntryPoint;
+import org.sid.service.impl.SAMLUserDetailsServiceImpl;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -82,11 +86,29 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+@EnableGlobalMethodSecurity(securedEnabled = true)
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements InitializingBean, DisposableBean {
 	
 	/** https://blog.imaginea.com/implementing-java-single-signon-with-saml/ **/
 	
 	/** configuração para authentication spring security **/
+	
+	@Autowired
+    private SAMLUserDetailsServiceImpl samlUserDetailsServiceImpl;
+	
+	private Timer backgroundTaskTimer;
+	private MultiThreadedHttpConnectionManager multiThreadedHttpConnectionManager;
+	
+	public void init() {
+		this.backgroundTaskTimer = new Timer(true);
+		this.multiThreadedHttpConnectionManager = new MultiThreadedHttpConnectionManager();
+	}
+
+	public void shutdown() {
+		this.backgroundTaskTimer.purge();
+		this.backgroundTaskTimer.cancel();
+		this.multiThreadedHttpConnectionManager.shutdown();
+	}
 	
 	@Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -196,7 +218,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public ExtendedMetadata extendedMetadata() {
 	    ExtendedMetadata extendedMetadata = new ExtendedMetadata();
-	    extendedMetadata.setIdpDiscoveryEnabled(true);
+	    //extendedMetadata.setIdpDiscoveryEnabled(true);
+	    extendedMetadata.setIdpDiscoveryEnabled(false);
 	    extendedMetadata.setSigningAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
 	    extendedMetadata.setSignMetadata(true);
 	    extendedMetadata.setEcpEnabled(true);
@@ -205,12 +228,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     
     @Bean
     public HttpClient httpClient() {
-        return new HttpClient(multiThreadedHttpConnectionManager());
-    }
-  
-    @Bean
-    public MultiThreadedHttpConnectionManager multiThreadedHttpConnectionManager() {
-        return new MultiThreadedHttpConnectionManager();
+        return new HttpClient(this.multiThreadedHttpConnectionManager);
     }
     
     /** SAMLContextProviderImpl is responsible for parsing HttpRequest/Response 
@@ -248,15 +266,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Qualifier("idp-ssocircle")
 	public ExtendedMetadataDelegate ssoCircleExtendedMetadataProvider() throws MetadataProviderException {
 		String idpSSOCircleMetadataURL = "https://idp.ssocircle.com/meta-idp.xml";
-		Timer timer = new Timer(true);
+		
 		HTTPMetadataProvider httpMetadataProvider = new HTTPMetadataProvider(
-				timer, this.httpClient(), idpSSOCircleMetadataURL);
+				this.backgroundTaskTimer, this.httpClient(), idpSSOCircleMetadataURL);
+		
 		httpMetadataProvider.setParserPool(this.parserPool());
+		
 		ExtendedMetadataDelegate extendedMetadataDelegate = 
 				new ExtendedMetadataDelegate(httpMetadataProvider, this.extendedMetadata());
+		
 		extendedMetadataDelegate.setMetadataTrustCheck(true);
 		extendedMetadataDelegate.setMetadataRequireSignature(false);
-		timer.purge();
+		this.backgroundTaskTimer.purge();
 		return extendedMetadataDelegate;
 	}
     
@@ -368,7 +389,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public SAMLProcessingFilter samlWebSSOProcessingFilter() throws Exception {
         SAMLProcessingFilter samlWebSSOProcessingFilter = new SAMLProcessingFilter();
-        samlWebSSOProcessingFilter.setAuthenticationManager(this.authenticationManager());
+        samlWebSSOProcessingFilter.setAuthenticationManager(authenticationManager());
         samlWebSSOProcessingFilter.setAuthenticationSuccessHandler(this.successRedirectHandler());
         samlWebSSOProcessingFilter.setAuthenticationFailureHandler(this.authenticationFailureHandler());
         return samlWebSSOProcessingFilter;
@@ -451,12 +472,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new FilterChainProxy(chains);
     }
     
-    // SAML Authentication Provider responsible for validating of received SAML
-    // messages
+    // SAML Authentication Provider responsible for validating of received SAML messages
 //    @Bean
 //    public SAMLAuthenticationProvider samlAuthenticationProvider() {
 //        SAMLAuthenticationProvider samlAuthenticationProvider = new SAMLAuthenticationProvider();
-//        //samlAuthenticationProvider.setUserDetails(samlUserDetailsServiceImpl);
+//        samlAuthenticationProvider.setUserDetails(this.samlUserDetailsServiceImpl);
 //        samlAuthenticationProvider.setForcePrincipalAsString(false);
 //        return samlAuthenticationProvider;
 //    }
@@ -469,9 +489,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      */
 //    @Override
 //    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-//        auth.authenticationProvider(samlAuthenticationProvider());
+//        auth.authenticationProvider(this.samlAuthenticationProvider());
 //    }
     
     /** end authentication with SAML **/
+    
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.init();
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        this.shutdown();
+    }
 
 }
