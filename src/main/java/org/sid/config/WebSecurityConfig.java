@@ -38,6 +38,7 @@ import org.springframework.security.saml.SAMLEntryPoint;
 import org.springframework.security.saml.SAMLLogoutFilter;
 import org.springframework.security.saml.SAMLLogoutProcessingFilter;
 import org.springframework.security.saml.SAMLProcessingFilter;
+import org.springframework.security.saml.SAMLWebSSOHoKProcessingFilter;
 import org.springframework.security.saml.context.SAMLContextProviderImpl;
 import org.springframework.security.saml.key.JKSKeyManager;
 import org.springframework.security.saml.key.KeyManager;
@@ -408,6 +409,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new SAMLLogoutProcessingFilter(this.successLogoutHandler(), this.logoutHandler());
     }
     
+    @Bean
+    public SAMLWebSSOHoKProcessingFilter samlWebSSOHoKProcessingFilter() throws Exception {
+        SAMLWebSSOHoKProcessingFilter samlWebSSOHoKProcessingFilter = new SAMLWebSSOHoKProcessingFilter();
+        samlWebSSOHoKProcessingFilter.setAuthenticationSuccessHandler(this.successRedirectHandler());
+        samlWebSSOHoKProcessingFilter.setAuthenticationManager(authenticationManager());
+        samlWebSSOHoKProcessingFilter.setAuthenticationFailureHandler(authenticationFailureHandler());
+        return samlWebSSOHoKProcessingFilter;
+    }
+    
     /**
 	 * Define the security filter chain in order to support SSO Auth by using SAML 2.0
 	 * 
@@ -433,8 +443,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         chains.add(new DefaultSecurityFilterChain(
         		new AntPathRequestMatcher("/saml/SingleLogout/**"), this.samlLogoutProcessingFilter()));
         
-//        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SSOHoK/**"),
-//                samlWebSSOHoKProcessingFilter()));
+        chains.add(new DefaultSecurityFilterChain(
+        		new AntPathRequestMatcher("/saml/SSOHoK/**"), this.samlWebSSOHoKProcessingFilter()));
+        
 //        chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/discovery/**"),
 //                samlIDPDiscovery()));
         return new FilterChainProxy(chains);
