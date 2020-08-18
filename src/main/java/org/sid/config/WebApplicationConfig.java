@@ -14,8 +14,8 @@ public class WebApplicationConfig implements WebMvcConfigurer {
 	@Bean
 	public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> containerCustomizer() {
 		return container -> {
-			container.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/404"));
-			container.addErrorPages(new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/500"));
+			container.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/error/404"));
+			container.addErrorPages(new ErrorPage(HttpStatus.INTERNAL_SERVER_ERROR, "/error/500"));
 		};
 	}
 }

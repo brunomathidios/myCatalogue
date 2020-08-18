@@ -5,7 +5,7 @@ package org.sid.config;
 //import java.util.HashMap;
 //import java.util.List;
 //import java.util.Map;
-import java.util.Timer;
+//import java.util.Timer;
 
 import javax.annotation.Resource;
 
@@ -75,11 +75,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.springframework.security.web.FilterChainProxy;
 //import org.springframework.security.web.SecurityFilterChain;
 //import org.springframework.security.web.access.channel.ChannelProcessingFilter;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+//import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+//import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 //import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
+//import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+//import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 //import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 //import org.springframework.security.web.csrf.CsrfFilter;
 //import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -93,19 +93,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 	
 	/** configuração para authentication spring security **/
 	
-	private Timer backgroundTaskTimer;
+	//private Timer backgroundTaskTimer;
 	//private MultiThreadedHttpConnectionManager multiThreadedHttpConnectionManager;
 	
-	public void init() {
-		this.backgroundTaskTimer = new Timer(true);
-		//this.multiThreadedHttpConnectionManager = new MultiThreadedHttpConnectionManager();
-	}
+//	public void init() {
+//		this.backgroundTaskTimer = new Timer(true);
+//		this.multiThreadedHttpConnectionManager = new MultiThreadedHttpConnectionManager();
+//	}
 
-	public void shutdown() {
-		this.backgroundTaskTimer.purge();
-		this.backgroundTaskTimer.cancel();
-		//this.multiThreadedHttpConnectionManager.shutdown();
-	}
+//	public void shutdown() {
+//		this.backgroundTaskTimer.purge();
+//		this.backgroundTaskTimer.cancel();
+//		this.multiThreadedHttpConnectionManager.shutdown();
+//	}
 	
 	@Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -114,7 +114,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
         	//.addFilterAfter(this.samlFilter(), BasicAuthenticationFilter.class)
         	//.addFilterBefore(this.samlFilter(), CsrfFilter.class)
             .authorizeRequests()
-                .antMatchers("/", "/403", "/saml/**").permitAll()
+                .antMatchers("/", "/403", "/saml/**", "/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
@@ -383,23 +383,23 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 //    }
     
     // Handler deciding where to redirect user after successful login
-    @Bean
-    public SavedRequestAwareAuthenticationSuccessHandler successRedirectHandler() {
-        SavedRequestAwareAuthenticationSuccessHandler successRedirectHandler =
-                new SavedRequestAwareAuthenticationSuccessHandler();
-        successRedirectHandler.setDefaultTargetUrl("/home");
-        return successRedirectHandler;
-    }
+//    @Bean
+//    public SavedRequestAwareAuthenticationSuccessHandler successRedirectHandler() {
+//        SavedRequestAwareAuthenticationSuccessHandler successRedirectHandler =
+//                new SavedRequestAwareAuthenticationSuccessHandler();
+//        successRedirectHandler.setDefaultTargetUrl("/home");
+//        return successRedirectHandler;
+//    }
     
 	// Handler deciding where to redirect user after failed login
-    @Bean
-    public SimpleUrlAuthenticationFailureHandler authenticationFailureHandler() {
-	    	SimpleUrlAuthenticationFailureHandler failureHandler =
-	    			new SimpleUrlAuthenticationFailureHandler();
-	    	failureHandler.setUseForward(true);
-	    	failureHandler.setDefaultFailureUrl("/error");
-	    	return failureHandler;
-    }
+//    @Bean
+//    public SimpleUrlAuthenticationFailureHandler authenticationFailureHandler() {
+//	    	SimpleUrlAuthenticationFailureHandler failureHandler =
+//	    			new SimpleUrlAuthenticationFailureHandler();
+//	    	failureHandler.setUseForward(true);
+//	    	failureHandler.setDefaultFailureUrl("/error");
+//	    	return failureHandler;
+//    }
     
     // Processing filter for WebSSO profile messages
 //    @Bean
@@ -412,22 +412,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 //    }
     
     // Handler for successful logout
-    @Bean
-    public SimpleUrlLogoutSuccessHandler successLogoutHandler() {
-        SimpleUrlLogoutSuccessHandler successLogoutHandler = new SimpleUrlLogoutSuccessHandler();
-        successLogoutHandler.setDefaultTargetUrl("/");
-        successLogoutHandler.setAlwaysUseDefaultTargetUrl(true);
-        return successLogoutHandler;
-    }
+//    @Bean
+//    public SimpleUrlLogoutSuccessHandler successLogoutHandler() {
+//        SimpleUrlLogoutSuccessHandler successLogoutHandler = new SimpleUrlLogoutSuccessHandler();
+//        successLogoutHandler.setDefaultTargetUrl("/");
+//        successLogoutHandler.setAlwaysUseDefaultTargetUrl(true);
+//        return successLogoutHandler;
+//    }
     
     // Logout handler terminating local session
-    @Bean
-    public SecurityContextLogoutHandler logoutHandler() {
-        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-        logoutHandler.setInvalidateHttpSession(true);
-        logoutHandler.setClearAuthentication(true);
-        return logoutHandler;
-    }
+//    @Bean
+//    public SecurityContextLogoutHandler logoutHandler() {
+//        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+//        logoutHandler.setInvalidateHttpSession(true);
+//        logoutHandler.setClearAuthentication(true);
+//        return logoutHandler;
+//    }
     
     // Overrides default logout processing filter with the one processing SAML
     // messages
@@ -510,12 +510,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
     
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.init();
+        //this.init();
     }
 
     @Override
     public void destroy() throws Exception {
-        this.shutdown();
+        //this.shutdown();
     }
 
 }

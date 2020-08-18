@@ -14,6 +14,6 @@ public class CustomHttp403ForbiddenEntryPoint implements AuthenticationEntryPoin
 	@Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException, ServletException {
-        response.sendRedirect(request.getContextPath() + "/403");
+        response.sendRedirect(request.getContextPath() + "/error/403");
     }
 }
