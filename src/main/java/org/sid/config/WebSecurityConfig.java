@@ -138,7 +138,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
 		web.ignoring().antMatchers("/webjars/**");
 		web.ignoring().antMatchers("/saml/**");
 		web.ignoring().antMatchers("/css/**","/fonts/**","/libs/**");
-		web.ignoring().antMatchers("/error/**");
 	}
 	
 	@Resource(name = "utilisateurService")
