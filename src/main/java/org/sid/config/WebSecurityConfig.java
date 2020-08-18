@@ -86,7 +86,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(securedEnabled = true)
+//@EnableGlobalMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements InitializingBean, DisposableBean {
 	
 	/** https://blog.imaginea.com/implementing-java-single-signon-with-saml/ **/
@@ -114,7 +114,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
         	//.addFilterAfter(this.samlFilter(), BasicAuthenticationFilter.class)
         	//.addFilterBefore(this.samlFilter(), CsrfFilter.class)
             .authorizeRequests()
-                .antMatchers("/", "/error/403", "/error/404", "/error/500", "/saml/**", "/login").permitAll()
+                .antMatchers("/", "/error/**", "/saml/**", "/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
