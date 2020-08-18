@@ -19,7 +19,6 @@ public class CustomHttp403ForbiddenEntryPoint implements AuthenticationEntryPoin
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException, ServletException {
 		LOG.error("ENTROU NO CUSTOM HTTP 403");
-		//request.getContextPath() + 
-        response.sendRedirect("/error/403");
+        response.sendRedirect(request.getContextPath() + "/403");
     }
 }
