@@ -18,7 +18,7 @@ public class ErrorsController implements ErrorController {
 
 	@Override
 	public String getErrorPath() {
-		return "/error";
+		return null;
 	}
 	
 	@RequestMapping("/error")
@@ -33,18 +33,18 @@ public class ErrorsController implements ErrorController {
 	     
 	        if(statusCode == HttpStatus.NOT_FOUND.value()) {
 	        	LOG.error("ENCONTROU O ERRO 404");
-	            return "/error/404";
+	            return "404";
 	        }
 	        else if(statusCode == HttpStatus.FORBIDDEN.value()) {
 	        	LOG.error("ENCONTROU O ERRO 403");
-	            return "/error/403";
+	            return "403";
 	        }
 	        else if(statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
 	        	LOG.error("ENCONTROU O ERRO 500");
-	            return "/error/500";
+	            return "500";
 	        }
 	    }
-	    return "/error/500";
+	    return "500";
 	}
 	
 	@GetMapping("/403")
