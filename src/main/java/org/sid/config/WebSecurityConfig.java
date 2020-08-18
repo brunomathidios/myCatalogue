@@ -114,7 +114,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
         	//.addFilterAfter(this.samlFilter(), BasicAuthenticationFilter.class)
         	//.addFilterBefore(this.samlFilter(), CsrfFilter.class)
             .authorizeRequests()
-                .antMatchers("/", "/error/**", "/saml/**", "/login").permitAll()
+                .antMatchers("/", "/saml/**", "/login").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
