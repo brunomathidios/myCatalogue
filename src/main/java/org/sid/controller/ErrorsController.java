@@ -32,12 +32,15 @@ public class ErrorsController implements ErrorController {
 	        Integer statusCode = Integer.valueOf(status.toString());
 	     
 	        if(statusCode == HttpStatus.NOT_FOUND.value()) {
+	        	LOG.error("ENCONTROU O ERRO 404");
 	            return "/error/404";
 	        }
 	        else if(statusCode == HttpStatus.FORBIDDEN.value()) {
+	        	LOG.error("ENCONTROU O ERRO 403");
 	            return "/error/403";
 	        }
 	        else if(statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+	        	LOG.error("ENCONTROU O ERRO 500");
 	            return "/error/500";
 	        }
 	    }
@@ -46,16 +49,19 @@ public class ErrorsController implements ErrorController {
 	
 	@GetMapping("/403")
     public String error403() {
+		LOG.error("VAI RETORNAR PAGINA DE ERRO 403");
         return "/error/403";
     }
     
     @GetMapping("/404")
     public String error404() {
+    	LOG.error("VAI RETORNAR PAGINA DE ERRO 404");
         return "/error/404";
     }
     
     @GetMapping("/500")
     public String error500() {
+    	LOG.error("VAI RETORNAR PAGINA DE ERRO 500");
         return "/error/500";
     }
 
