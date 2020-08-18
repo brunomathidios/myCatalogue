@@ -18,7 +18,7 @@ public class ErrorsController implements ErrorController {
 
 	@Override
 	public String getErrorPath() {
-		LOG.error("ENCONTROU NO METODO ERROR PATH");
+		LOG.error("ENTROU NO METODO ERROR PATH");
 		return "/error";
 	}
 	
@@ -48,22 +48,4 @@ public class ErrorsController implements ErrorController {
 	    return "500";
 	}
 	
-	@GetMapping("/403")
-    public String error403() {
-		LOG.error("VAI RETORNAR PAGINA DE ERRO 403");
-        return "/error/403";
-    }
-    
-    @GetMapping("/404")
-    public String error404() {
-    	LOG.error("VAI RETORNAR PAGINA DE ERRO 404");
-        return "/error/404";
-    }
-    
-    @GetMapping("/500")
-    public String error500() {
-    	LOG.error("VAI RETORNAR PAGINA DE ERRO 500");
-        return "/error/500";
-    }
-
 }
