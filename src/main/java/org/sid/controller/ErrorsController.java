@@ -18,6 +18,7 @@ public class ErrorsController implements ErrorController {
 
 	@Override
 	public String getErrorPath() {
+		LOG.error("ENCONTROU NO METODO ERROR PATH");
 		return "/error";
 	}
 	
