@@ -18,7 +18,7 @@ public class ErrorsController implements ErrorController {
 
 	@Override
 	public String getErrorPath() {
-		return null;
+		return "/error";
 	}
 	
 	@RequestMapping("/error")
