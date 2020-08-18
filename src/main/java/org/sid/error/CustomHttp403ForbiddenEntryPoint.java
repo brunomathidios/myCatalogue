@@ -20,6 +20,6 @@ public class CustomHttp403ForbiddenEntryPoint implements AuthenticationEntryPoin
             AuthenticationException authException) throws IOException, ServletException {
 		LOG.error("ENTROU NO CUSTOM HTTP 403");
 		//request.getContextPath() + 
-        response.sendRedirect("/error/403");
+        response.sendRedirect("403");
     }
 }
