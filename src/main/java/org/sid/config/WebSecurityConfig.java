@@ -128,9 +128,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements I
                 .and()
             .logout()
                 .permitAll()
-                //.and()
-                //.exceptionHandling().authenticationEntryPoint(new CustomHttp403ForbiddenEntryPoint())
-                ;
+                .and()
+                .exceptionHandling().authenticationEntryPoint(new CustomHttp403ForbiddenEntryPoint());
     }
 	
 	@Override
